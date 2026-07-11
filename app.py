@@ -1,10 +1,7 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
-import matplotlib
-# Configurar el backend 'Agg' ANTES de importar pyplot para evitar el Segmentation Fault
-matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Configuración de la página (ancho completo y título)
 st.set_page_config(page_title="Regresión Cuadrática", layout="wide")
@@ -27,18 +24,18 @@ def formatear_numero(val):
         str_val = str_val.rstrip('0').rstrip('.')
     return str_val if str_val else "0"
 
-# Crear dos columnas para la interfaz principal
+# Crear dos columnas para la interfaz
 col1, col2 = st.columns([1, 2])
 
 with col1:
     st.subheader("Datos Experimentales")
     st.write("Añade, edita o selecciona la fila para eliminar puntos directamente en la tabla:")
     
-    # Editor de datos interactivo 
+    # Editor de datos interactivo (Permite añadir y eliminar filas dinámicamente)
     df_editado = st.data_editor(
         st.session_state.df_puntos,
         num_rows="dynamic",
-        width="stretch", 
+        use_container_width=True,
         hide_index=False
     )
     
@@ -53,7 +50,7 @@ with col1:
 with col2:
     st.subheader("Resultados y Gráfica")
     
-    # Extraer los datos limpios de la tabla
+    # Extraer los datos limpios de la tabla (omitiendo filas vacías si el usuario está editando)
     df_limpio = df_editado.dropna()
     x = df_limpio['X'].to_numpy()
     y = df_limpio['Y'].to_numpy()
@@ -83,7 +80,7 @@ with col2:
             coef = np.linalg.solve(A, B)
             a0, a1, a2 = coef
             
-            # Aplicar formato exacto
+            # Aplicar formato exacto solicitado
             a0_str = formatear_numero(a0)
             a1_str = formatear_numero(a1)
             a2_str = formatear_numero(a2)
@@ -96,23 +93,21 @@ with col2:
             
             r2 = 1 - (sr_val / st_val) if st_val != 0 else 1.0
 
-            # Mostrar Ecuación y R2
+            # Mostrar Ecuación y R2 en cuadros de métricas estilizados
             st.info(f"**Ecuación:**  \n$y = {a0_str} + ({a1_str})x + ({a2_str})x^2$")
             st.success(f"**r² =** {r2:.4f}  (Ajuste del {r2 * 100:.2f}%)")
 
-            # 4. Graficar (AHORA INDEPENDIENTE DE LA BÚSQUEDA)
+            # 4. Graficar
             fig, ax = plt.subplots(figsize=(8, 5))
             
+            # Cambiar el color del fondo de la gráfica para que se adapte al modo oscuro/claro
             fig.patch.set_alpha(0.0) 
             ax.set_facecolor('none')
             
-            # Dibujar puntos originales
+            # Dibujar puntos y línea
             ax.scatter(x, y, color='red', label='Datos experimentales', zorder=5)
-            
-            # La línea vuelve a sus límites originales
-            x_line = np.linspace(np.min(x) - 5, np.max(x) + 5, 200)
+            x_line = np.linspace(min(x) - 5, max(x) + 5, 200)
             y_line = a0 + a1*x_line + a2*(x_line**2)
-            
             ax.plot(x_line, y_line, color='blue', label='Función: f(x)')
             
             ax.set_title("Regresión Polinomial Cuadrática", color='gray')
@@ -127,13 +122,11 @@ with col2:
             ax.grid(True, linestyle='--', alpha=0.3)
             
             st.pyplot(fig)
-            plt.close(fig) # Fundamental para evitar problemas de memoria en el servidor
 
-            # --- NUEVA UBICACIÓN: BÚSQUEDA DE VALOR (ABAJO DE LA GRÁFICA) ---
+            # --- SECCIÓN: BÚSQUEDA DE VALOR (AÑADIDO EXACTAMENTE DEBAJO DE LA GRÁFICA) ---
             st.divider()
-            st.subheader("🔍 Buscar valor proyectado en f(x)")
+            st.subheader("🔍 Evaluar valor en f(x)")
             
-            # Dividir esta sección en dos columnas para poner el resultado al costado
             col_b1, col_b2 = st.columns([1, 2])
             
             with col_b1:
@@ -145,11 +138,11 @@ with col2:
                 y_encontrado = a0 + a1*x_buscar + a2*(x_buscar**2)
                 y_enc_str = formatear_numero(y_encontrado)
                 
-                # Añadir espacios en blanco para alinear el texto verticalmente con la caja
+                # Espaciado para centrar verticalmente con el recuadro de la izquierda
                 st.write("")
                 st.write("")
                 st.markdown(f"**Resultado:** Para **X = {x_buscar}**, el valor es **Y = {y_enc_str}**")
-            # -----------------------------------------------------------------
+            # -----------------------------------------------------------------------------
 
         except np.linalg.LinAlgError:
             st.error("Error Matemático: El sistema de ecuaciones es singular.")
