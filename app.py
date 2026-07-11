@@ -125,3 +125,24 @@ with col2:
 
         except np.linalg.LinAlgError:
             st.error("Error Matemático: El sistema de ecuaciones es singular.")
+
+# ---- NUEVA SECCIÓN: EVALUADOR ----
+# Retornamos a col1 al final del código para asegurarnos de que a0, a1 y a2 ya existan
+with col1:
+    # Verificamos que la ecuación se haya resuelto exitosamente antes de mostrar el evaluador
+    if 'a0' in locals() and 'a1' in locals() and 'a2' in locals():
+        st.divider()
+        st.subheader("Evaluar Punto")
+        
+        # Sub-columnas para colocar el input y el resultado uno al lado del otro
+        col_in, col_out = st.columns(2)
+        
+        with col_in:
+            # Entrada de X
+            x_eval = st.number_input("Valor de x:", value=0.0, format="%.4f")
+            
+        with col_out:
+            # Evaluación en la función cuadrática
+            y_eval = a0 + a1 * x_eval + a2 * (x_eval**2)
+            # Mostramos el resultado en un input deshabilitado para que parezca de solo lectura
+            st.text_input("Resultado f(x):", value=formatear_numero(y_eval), disabled=True)
