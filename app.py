@@ -27,7 +27,7 @@ def formatear_numero(val):
         str_val = str_val.rstrip('0').rstrip('.')
     return str_val if str_val else "0"
 
-# Crear dos columnas para la interfaz
+# Crear dos columnas para la interfaz principal
 col1, col2 = st.columns([1, 2])
 
 with col1:
@@ -38,7 +38,7 @@ with col1:
     df_editado = st.data_editor(
         st.session_state.df_puntos,
         num_rows="dynamic",
-        width="stretch",  # <-- CORRECCIÓN: Evita el mensaje de advertencia (Warning) en los logs
+        width="stretch", 
         hide_index=False
     )
     
@@ -100,21 +100,7 @@ with col2:
             st.info(f"**Ecuación:**  \n$y = {a0_str} + ({a1_str})x + ({a2_str})x^2$")
             st.success(f"**r² =** {r2:.4f}  (Ajuste del {r2 * 100:.2f}%)")
 
-            # --- SECCIÓN: BÚSQUEDA DE VALOR ---
-            st.divider()
-            st.subheader("🔍 Buscar valor en f(x)")
-            
-            # Widget para ingresar el valor
-            x_buscar = st.number_input("Ingresa un valor para X:", value=35.0, step=1.0)
-            
-            # Calcular el valor de Y correspondiente
-            y_encontrado = a0 + a1*x_buscar + a2*(x_buscar**2)
-            y_enc_str = formatear_numero(y_encontrado)
-            
-            st.markdown(f"**Resultado:** Para **X = {x_buscar}**, el valor proyectado es **Y = {y_enc_str}**")
-            # ----------------------------------------
-
-            # 4. Graficar
+            # 4. Graficar (AHORA INDEPENDIENTE DE LA BÚSQUEDA)
             fig, ax = plt.subplots(figsize=(8, 5))
             
             fig.patch.set_alpha(0.0) 
@@ -123,14 +109,8 @@ with col2:
             # Dibujar puntos originales
             ax.scatter(x, y, color='red', label='Datos experimentales', zorder=5)
             
-            # Dibujar el punto buscado
-            ax.scatter(x_buscar, y_encontrado, color='green', marker='*', s=200, 
-                       label=f'Punto buscado ({x_buscar}, {y_enc_str})', zorder=6)
-            
-            # Ajustar la línea para que cubra los datos y el punto buscado
-            min_x_plot = min(np.min(x), x_buscar) - 5
-            max_x_plot = max(np.max(x), x_buscar) + 5
-            x_line = np.linspace(min_x_plot, max_x_plot, 200)
+            # La línea vuelve a sus límites originales
+            x_line = np.linspace(np.min(x) - 5, np.max(x) + 5, 200)
             y_line = a0 + a1*x_line + a2*(x_line**2)
             
             ax.plot(x_line, y_line, color='blue', label='Función: f(x)')
@@ -147,7 +127,29 @@ with col2:
             ax.grid(True, linestyle='--', alpha=0.3)
             
             st.pyplot(fig)
-            plt.close(fig) # <-- CORRECCIÓN: Libera la memoria de la gráfica en el servidor
+            plt.close(fig) # Fundamental para evitar problemas de memoria en el servidor
+
+            # --- NUEVA UBICACIÓN: BÚSQUEDA DE VALOR (ABAJO DE LA GRÁFICA) ---
+            st.divider()
+            st.subheader("🔍 Buscar valor proyectado en f(x)")
+            
+            # Dividir esta sección en dos columnas para poner el resultado al costado
+            col_b1, col_b2 = st.columns([1, 2])
+            
+            with col_b1:
+                # Widget para ingresar el valor
+                x_buscar = st.number_input("Ingresa un valor para X:", value=35.0, step=1.0)
+            
+            with col_b2:
+                # Calcular el valor de Y correspondiente
+                y_encontrado = a0 + a1*x_buscar + a2*(x_buscar**2)
+                y_enc_str = formatear_numero(y_encontrado)
+                
+                # Añadir espacios en blanco para alinear el texto verticalmente con la caja
+                st.write("")
+                st.write("")
+                st.markdown(f"**Resultado:** Para **X = {x_buscar}**, el valor es **Y = {y_enc_str}**")
+            # -----------------------------------------------------------------
 
         except np.linalg.LinAlgError:
             st.error("Error Matemático: El sistema de ecuaciones es singular.")
