@@ -97,6 +97,20 @@ with col2:
             st.info(f"**Ecuación:**  \n$y = {a0_str} + ({a1_str})x + ({a2_str})x^2$")
             st.success(f"**r² =** {r2:.4f}  (Ajuste del {r2 * 100:.2f}%)")
 
+            # --- NUEVA SECCIÓN: BÚSQUEDA DE VALOR ---
+            st.divider()
+            st.subheader("🔍 Buscar valor en f(x)")
+            
+            # Widget para ingresar el valor (usando 35.0 como ejemplo por defecto)
+            x_buscar = st.number_input("Ingresa un valor para X:", value=35.0, step=1.0)
+            
+            # Calcular el valor de Y correspondiente
+            y_encontrado = a0 + a1*x_buscar + a2*(x_buscar**2)
+            y_enc_str = formatear_numero(y_encontrado)
+            
+            st.markdown(f"**Resultado:** Para **X = {x_buscar}**, el valor proyectado es **Y = {y_enc_str}**")
+            # ----------------------------------------
+
             # 4. Graficar
             fig, ax = plt.subplots(figsize=(8, 5))
             
@@ -104,10 +118,19 @@ with col2:
             fig.patch.set_alpha(0.0) 
             ax.set_facecolor('none')
             
-            # Dibujar puntos y línea
+            # Dibujar puntos originales
             ax.scatter(x, y, color='red', label='Datos experimentales', zorder=5)
-            x_line = np.linspace(min(x) - 5, max(x) + 5, 200)
+            
+            # Dibujar el punto buscado con un color y marcador distintivo (ej. estrella verde)
+            ax.scatter(x_buscar, y_encontrado, color='green', marker='*', s=200, 
+                       label=f'Punto buscado ({x_buscar}, {y_enc_str})', zorder=6)
+            
+            # Ajustar la línea para que cubra tanto los datos como el punto buscado
+            min_x_plot = min(min(x), x_buscar) - 5
+            max_x_plot = max(max(x), x_buscar) + 5
+            x_line = np.linspace(min_x_plot, max_x_plot, 200)
             y_line = a0 + a1*x_line + a2*(x_line**2)
+            
             ax.plot(x_line, y_line, color='blue', label='Función: f(x)')
             
             ax.set_title("Regresión Polinomial Cuadrática", color='gray')
