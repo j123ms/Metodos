@@ -123,26 +123,5 @@ with col2:
             
             st.pyplot(fig)
 
-            # --- SECCIÓN: BÚSQUEDA DE VALOR (AÑADIDO EXACTAMENTE DEBAJO DE LA GRÁFICA) ---
-            st.divider()
-            st.subheader("🔍 Evaluar valor en f(x)")
-            
-            col_b1, col_b2 = st.columns([1, 2])
-            
-            with col_b1:
-                # Widget para ingresar el valor
-                x_buscar = st.number_input("Ingresa un valor para X:", value=35.0, step=1.0)
-            
-            with col_b2:
-                # Calcular el valor de Y correspondiente
-                y_encontrado = a0 + a1*x_buscar + a2*(x_buscar**2)
-                y_enc_str = formatear_numero(y_encontrado)
-                
-                # Espaciado para centrar verticalmente con el recuadro de la izquierda
-                st.write("")
-                st.write("")
-                st.markdown(f"**Resultado:** Para **X = {x_buscar}**, el valor es **Y = {y_enc_str}**")
-            # -----------------------------------------------------------------------------
-
         except np.linalg.LinAlgError:
             st.error("Error Matemático: El sistema de ecuaciones es singular.")
