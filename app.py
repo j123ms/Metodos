@@ -1,7 +1,10 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib
+# Configurar el backend 'Agg' ANTES de importar pyplot para evitar el Segmentation Fault
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
 
 # Configuración de la página (ancho completo y título)
 st.set_page_config(page_title="Regresión Cuadrática", layout="wide")
@@ -31,11 +34,11 @@ with col1:
     st.subheader("Datos Experimentales")
     st.write("Añade, edita o selecciona la fila para eliminar puntos directamente en la tabla:")
     
-    # Editor de datos interactivo (Permite añadir y eliminar filas dinámicamente)
+    # Editor de datos interactivo 
     df_editado = st.data_editor(
         st.session_state.df_puntos,
         num_rows="dynamic",
-        use_container_width=True,
+        width="stretch",  # <-- CORRECCIÓN: Evita el mensaje de advertencia (Warning) en los logs
         hide_index=False
     )
     
@@ -50,7 +53,7 @@ with col1:
 with col2:
     st.subheader("Resultados y Gráfica")
     
-    # Extraer los datos limpios de la tabla (omitiendo filas vacías si el usuario está editando)
+    # Extraer los datos limpios de la tabla
     df_limpio = df_editado.dropna()
     x = df_limpio['X'].to_numpy()
     y = df_limpio['Y'].to_numpy()
@@ -80,7 +83,7 @@ with col2:
             coef = np.linalg.solve(A, B)
             a0, a1, a2 = coef
             
-            # Aplicar formato exacto solicitado
+            # Aplicar formato exacto
             a0_str = formatear_numero(a0)
             a1_str = formatear_numero(a1)
             a2_str = formatear_numero(a2)
@@ -93,15 +96,15 @@ with col2:
             
             r2 = 1 - (sr_val / st_val) if st_val != 0 else 1.0
 
-            # Mostrar Ecuación y R2 en cuadros de métricas estilizados
+            # Mostrar Ecuación y R2
             st.info(f"**Ecuación:**  \n$y = {a0_str} + ({a1_str})x + ({a2_str})x^2$")
             st.success(f"**r² =** {r2:.4f}  (Ajuste del {r2 * 100:.2f}%)")
 
-            # --- NUEVA SECCIÓN: BÚSQUEDA DE VALOR ---
+            # --- SECCIÓN: BÚSQUEDA DE VALOR ---
             st.divider()
             st.subheader("🔍 Buscar valor en f(x)")
             
-            # Widget para ingresar el valor (usando 35.0 como ejemplo por defecto)
+            # Widget para ingresar el valor
             x_buscar = st.number_input("Ingresa un valor para X:", value=35.0, step=1.0)
             
             # Calcular el valor de Y correspondiente
@@ -114,20 +117,19 @@ with col2:
             # 4. Graficar
             fig, ax = plt.subplots(figsize=(8, 5))
             
-            # Cambiar el color del fondo de la gráfica para que se adapte al modo oscuro/claro
             fig.patch.set_alpha(0.0) 
             ax.set_facecolor('none')
             
             # Dibujar puntos originales
             ax.scatter(x, y, color='red', label='Datos experimentales', zorder=5)
             
-            # Dibujar el punto buscado con un color y marcador distintivo (ej. estrella verde)
+            # Dibujar el punto buscado
             ax.scatter(x_buscar, y_encontrado, color='green', marker='*', s=200, 
                        label=f'Punto buscado ({x_buscar}, {y_enc_str})', zorder=6)
             
-            # Ajustar la línea para que cubra tanto los datos como el punto buscado
-            min_x_plot = min(min(x), x_buscar) - 5
-            max_x_plot = max(max(x), x_buscar) + 5
+            # Ajustar la línea para que cubra los datos y el punto buscado
+            min_x_plot = min(np.min(x), x_buscar) - 5
+            max_x_plot = max(np.max(x), x_buscar) + 5
             x_line = np.linspace(min_x_plot, max_x_plot, 200)
             y_line = a0 + a1*x_line + a2*(x_line**2)
             
@@ -145,6 +147,7 @@ with col2:
             ax.grid(True, linestyle='--', alpha=0.3)
             
             st.pyplot(fig)
+            plt.close(fig) # <-- CORRECCIÓN: Libera la memoria de la gráfica en el servidor
 
         except np.linalg.LinAlgError:
             st.error("Error Matemático: El sistema de ecuaciones es singular.")
