@@ -1,5 +1,7 @@
 import streamlit as st
 import numpy as np
+import matplotlib
+matplotlib.use('Agg') # <-- Añade esta línea obligatoriamente
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -35,7 +37,7 @@ with col1:
     df_editado = st.data_editor(
         st.session_state.df_puntos,
         num_rows="dynamic",
-        use_container_width=True,
+        width="stretch",  # <-- Reemplaza use_container_width=True por esto
         hide_index=False
     )
     
